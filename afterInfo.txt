@@ -1,0 +1,29 @@
+
+Nmap scan report for chadwicks 192.168.1.1
+MAC Address: B4:75:0E:53:49:DC Unknown
+Nmap scan report for CHADWICK-PC.wp.comcast.net 192.168.1.100
+MAC Address: 00:23:54:04:FE:FF Asustek Computer
+Nmap scan report for bt.wp.comcast.net 192.168.1.101
+Illegal characters in hostname -- replacing with '*'
+Nmap scan report for New*Xbox.wp.comcast.net 192.168.1.102
+MAC Address: 60:45:BD:A7:93:44 Unknown
+Nmap scan report for 192.168.1.105
+MAC Address: 00:19:9D:50:BD:23 Vizio
+Nmap scan report for Apple-TV.wp.comcast.net 192.168.1.106
+MAC Address: A0:ED:CD:D6:63:28 Unknown
+Nmap scan report for android-9bf82ce588060e3a.wp.comcast.net 192.168.1.110
+MAC Address: 00:2D:00:00:E5:EA Unknown
+Nmap scan report for android-5cdb32d7ff13b317.wp.comcast.net 192.168.1.113
+MAC Address: 34:23:BA:49:82:8B Unknown
+Nmap scan report for android-a0044cad64141ef7.wp.comcast.net 192.168.1.121
+MAC Address: 58:A2:B5:F3:AC:F3 Unknown
+Nmap scan report for EPSONBA732C.wp.comcast.net 192.168.1.126
+MAC Address: 00:26:AB:BA:73:2C Seiko Epson
+Nmap scan report for ThePenguidorCave.wp.comcast.net 192.168.1.131
+MAC Address: 00:23:08:6E:A5:83 Arcadyan Technology
+Nmap scan report for android-c64936a5ce37748d.wp.comcast.net 192.168.1.137
+MAC Address: 34:31:11:8C:43:4D Unknown
+Nmap scan report for Matt-PC.wp.comcast.net 192.168.1.138
+MAC Address: A0:88:B4:0B:84:AC Intel Corporate
+Nmap scan report for android-382c2ac7f926425e.wp.comcast.net 192.168.1.145
+MAC Address: 34:31:11:8C:4B:EB Unknown

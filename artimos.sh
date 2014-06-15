@@ -1,6 +1,8 @@
 #!/bin/bash
+cd $HOME\/artimos
 #resize the screen to fit the program
-resize -s 30 110
+resize -s 30 110  > /dev/null 2>&1
+bash openScreen.sh &
 #empty the nmap info files
 echo "" > afterInfo.txt
 echo "" > info.txt
@@ -60,15 +62,70 @@ channel=13
 2.484)
 channel=14
 ;;
+5.240)
+channel=48
+;;
+5.260)
+channel=52
+;;
+5.280)
+channel=56
+;;
+5.300)
+channel=60
+;;
+5.320)
+channel=64
+;;
+5.500)
+channel=100
+;;
+5.520)
+channel=104
+;;
+5.540)
+channel=108
+;;
+5.560)
+channel=112
+;;
+5.580)
+channel=116
+;;
+5.660)
+channel=132
+;;
+5.680)
+channel=136
+;;
+5.700)
+channel=140
+;;
+5.745)
+channel=149
+;;
+5.765)
+channel=153
+;;
+5.785)
+channel=157
+;;
+5.805)
+channel=161
+;;
+5.825)
+channel=165
+;;
 esac
 # starts your interface in monitor mode and in the correct channel with a random MAC address
 # p.s. Good idea to roll your wlan MAC address before starting this program
-airmon-ng stop mon0
-airmon-ng start $interface $channel
+airmon-ng stop mon0 > /dev/null 2>&1
+airmon-ng start $interface $channel > /dev/null 2>&1
 ifconfig mon0 down
-macchanger -r mon0
+macchanger -r mon0 > /dev/null 2>&1
 ifconfig mon0 up
 bash airodumpInfo.sh &
+sleep 6
 #naming function for giving nicknames to your friend's MAC addresses and saves them to personalNameInfo.txt
 function name(){
 ipSelect=""
